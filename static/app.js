@@ -1,52 +1,106 @@
-var config = {
-        type: Phaser.AUTO,
-        width: 800,
-        height: 600,
-        physics: {
-            default: 'arcade',
-            arcade: {
-                gravity: { y: 200 }
-            }
-        },
-        scene: {
-            preload: preload,
-            create: create
-        }
-    };
 
-    var game = new Phaser.Game(config);
 
-    function preload ()
-    {
-        this.load.setBaseURL('http://labs.phaser.io');
+var Engine;
+var World;
+var Bodies;
+var Body;
+var Constraint;
+var Mouse;
+var MouseConstraint;
+var engine;
+var world;
+//var stickHead;
+//var stickBody;
+//var stickLegRightUpper;
+//var stickLegLeftUpper;
+var ground;
+var leg;
 
-        this.load.image('sky', 'assets/skies/space3.png');
-        this.load.image('logo', 'assets/sprites/phaser3-logo.png');
-        this.load.image('red', 'assets/particles/red.png');
+
+
+function setup() {
+  var canvas = createCanvas(600, 600);
+  // module aliases
+  Engine = Matter.Engine;
+  World = Matter.World;
+  Bodies = Matter.Bodies;
+  Body = Matter.Body;
+  Constraint = Matter.Constraint;
+  Mouse = Matter.Mouse;
+  MouseConstraint = Matter.MouseConstraint;
+  engine = Engine.create();
+  world = engine.world;
+
+  //stickHead = new StickHead(300, 15, 50);
+  //stickBody = new Box(300, 100, 50, 200);
+  //stickLegRightUpper = new Box(300, 185, 50, 150);
+  //stickLegLeftUpper = new Box(300, 185, 50, 150);
+
+  ground = new Boundary(width / 2, 575, width, 50);
+
+  World.add(world, ground);
+  /*
+  var options1 = {
+    bodyA: stickHead.body,
+    bodyB: stickBody.body,
+    pointB: { x: 0, y: 85 },
+    length: 0,
+    stiffness: 1
+  }
+  var headToBodyConstraint = Constraint.create(options1);
+
+  var options2 = {
+    bodyA: stickBody.body,
+    pointA: { x: 0, y: -85 },
+    bodyB: stickLegRightUpper.body,
+    pointB: { x: 0, y: 85 },
+    length: 0,
+    stiffness: 1
+  }
+  var bodyToRightUpperLegConstraint = Constraint.create(options2);
+
+  var options3 = {
+    bodyA: stickBody.body,
+    pointA: { x: 0, y: -85 },
+    bodyB: stickLegLeftUpper.body,
+    pointB: { x: 0, y: 85 },
+    length: 0,
+    stiffness: 1
+  }
+  var bodyToLeftUpperLegConstraint = Constraint.create(options3);
+
+  World.add(world, [headToBodyConstraint, bodyToRightUpperLegConstraint, bodyToLeftUpperLegConstraint]);
+  */
+  leg = new StickLeg(400, 200);
+  World.add(world, leg);
+
+  var canvasMouse = Mouse.create(canvas.elt);
+  canvasMouse.pixelRatio = pixelDensity();
+  var options4 = {
+    mouse: canvasMouse,
+    constraint: {
+      stiffness: 0.1,
+      length: 0,
+      angularStiffness: 0
     }
+  }
+  mouseConstraint = MouseConstraint.create(engine, options4);
+  World.add(world, mouseConstraint);
+  //console.log(stickBody);
+  Engine.run(engine);
+}
 
-    function create ()
-    {
-        this.add.image(400, 300, 'sky');
-
-        var particles = this.add.particles('red');
-
-        var emitter = particles.createEmitter({
-            speed: 100,
-            scale: { start: 1, end: 0 },
-            blendMode: 'ADD'
-        });
-
-        var logo = this.physics.add.image(400, 100, 'logo');
-
-        logo.setVelocity(100, 200);
-        logo.setBounce(1, 1);
-        logo.setCollideWorldBounds(true);
-
-        emitter.startFollow(logo);
-    }
-
-
+function draw() {
+  background(200);
+  //ground.show();
+  ground.show();
+  //stickHead.show();
+  //stickBody.show();
+  //stickLegRightUpper.show();
+  //stickLegLeftUpper.show();
+  leg.show();
+  //console.log(box1.pos.y)
+}
 /*
 class Line {
   constructor(v1, v2) {
@@ -63,14 +117,5 @@ class Line {
 
 class Rectangle {
   constructor()
-}
-
-function setup() {
-  createCanvas(800, 800);
-  line1 = new Line([400, 400], [500, 500]);
-}
-
-function draw() {
-  line1.show();
 }
 */
