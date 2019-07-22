@@ -1,65 +1,89 @@
-function StickLeg(x, y) {
-  this.upperLegVertices = [ {x: 0, y: 0}, {x: 0, y: 100}, {x: 30, y: 200}, {x: 100, y: 190}, {x: 60, y: 0} ];
-  this.upperLeg = Bodies.fromVertices(x, y, this.upperLegVertices);
+function StickLeg(x, y, options) {
 
-  this.lowerLeg = Bodies.rectangle(30, 201, 60, 200);
+  this.upperLeg = Bodies.rectangle(x, y, 30, 100, options);
+  this.lowerLeg = Bodies.rectangle(x, y + 101, 30, 100, options);
+  this.foot = Bodies.rectangle(x + 10, y + 167, 50, 30, options);
 
-  var option1 = {
+  var legJointOptions = {
     bodyA: this.upperLeg,
-    pointA: { x: -15, y: 99 },
+    pointA: { x: -15, y: 50 },
     bodyB: this.lowerLeg,
-    pointB: { x: -26, y: -100 },
+    pointB: { x: -15, y: -50 },
     length: 0,
     stiffness: 1
   }
-  this.legConstraint1 = Constraint.create(option1);
+  this.legJoint = Constraint.create(legJointOptions);
 
-  var option2 = {
+  /*
+  var legPinOptions = {
     bodyA: this.upperLeg,
-    pointA: { x: -15, y: -85},
+    pointA: { x: -15, y: -50},
     pointB: { x: 300, y: 0},
     length: 100,
     stiffness: 0.7
   }
-  this.legConstraint2 = Constraint.create(option2);
+  this.legPin = Constraint.create(legPinOptions);
+  */
 
-  var options10 = {
+  var legMuscleOptions = {
     bodyA: this.upperLeg,
-    pointA: { x: -100, y: -100},
+    pointA: { x: -30, y: -50},
     bodyB: this.lowerLeg,
-    pointB: { x: - 100, y: 0},
-    length: 300,
-    stiffness: 0.1
+    pointB: { x: -30, y: 50},
+    length: 200,
+    stiffness: 0.7
   }
-  this.moveCon = Constraint.create(options10);
+  this.legMuscle = Constraint.create(legMuscleOptions);
 
-  World.add(world, [this.upperLeg, this.lowerLeg, this.legConstraint1, this.legConstraint2, this.moveCon]);
+  var footJointOptions = {
+    bodyA: this.lowerLeg,
+    pointA: { x: -15, y: 50},
+    bodyB: this.foot,
+    pointB: { x: -25, y: -15},
+    length: 0,
+    stiffness: 1
+  }
+  this.footJoint = Constraint.create(footJointOptions);
+
+  var footMuscleOptions = {
+    bodyA: this.lowerLeg,
+    pointA: { x: 15, y: 25},
+    bodyB: this.foot,
+    pointB: { x: 25, y: -15},
+    length: 37,
+    stiffness: 0.2
+  }
+  this.footMuscle = Constraint.create(footMuscleOptions);
+
+  this.body = Composite.create({
+    bodies: [this.upperLeg, this.lowerLeg, this.foot],
+    constraints: [this.legJoint, this.legMuscle, this.footJoint, this.footMuscle]
+  });
+  World.add(world, this.body);
 
   this.show = function() {
-    var upperLegPos = this.upperLeg.vertices[0];
+    var upperLegPos = this.upperLeg.position;
     var upperLegAngle = this.upperLeg.angle;
     var lowerLegPos = this.lowerLeg.position;
     var lowerLegAngle = this.lowerLeg.angle;
+    var footPos = this.foot.position;
+    var footAngle = this.foot.angle;
 
-    var uLegCentroid = this.upperLeg.position;
-    var uLegOffset = this.legConstraint1.pointA;
-    var lLegOffset = this.legConstraint1.pointB;
+    //var legPinPos = this.legPin.pointA;
+    //var pinPos = this.legPin.pointB;
 
-    var uLegOffset2 = this.legConstraint2.pointA;
-    var fixedOffset = this.legConstraint2.pointB;
+    var upperLegMusclePos = this.legMuscle.pointA;
+    var lowerLegMusclePos = this.legMuscle.pointB;
 
-    var uMoveCon = this.moveCon.pointA;
-    var lMoveCon = this.moveCon.pointB;
+    var lowerLegFootMusclePos = this.footMuscle.pointA;
+    var footFootMusclePos = this.footMuscle.pointB;
 
     push();
     translate(upperLegPos.x, upperLegPos.y);
     rotate(upperLegAngle);
     fill(0);
-    beginShape();
-    for (var i = 0; i < this.upperLegVertices.length; i++) {
-      vertex(this.upperLegVertices[i].x, this.upperLegVertices[i].y);
-    }
-    endShape(CLOSE);
+    rectMode(CENTER);
+    rect(0, 0, 30, 100);
     pop();
 
     push();
@@ -67,27 +91,45 @@ function StickLeg(x, y) {
     rotate(lowerLegAngle);
     fill(0);
     rectMode(CENTER);
-    rect(0, 0, 50, 200);
+    rect(0, 0, 30, 100);
     pop();
+
+    push();
+    translate(footPos.x, footPos.y);
+    rotate(footAngle);
+    fill(0);
+    rectMode(CENTER);
+    rect(0, 0, 50, 30);
+    pop();
+
+    /*
+    push();
+    stroke(255, 0, 0);
+    line(pinPos.x, pinPos.y, upperLegPos.x + legPinPos.x, upperLegPos.y + legPinPos.y);
+    pop();
+    */
 
     push();
     stroke(0, 255, 0);
-    line(uLegCentroid.x + uLegOffset.x, uLegCentroid.y + uLegOffset.y, lowerLegPos.x + lLegOffset.x, lowerLegPos.y + lLegOffset.y);
-    line(fixedOffset.x, fixedOffset.y, uLegCentroid.x + uLegOffset2.x, uLegCentroid.y + uLegOffset2.y);
+    line(upperLegPos.x + upperLegMusclePos.x, upperLegPos.y + upperLegMusclePos.y, lowerLegPos.x + lowerLegMusclePos.x, lowerLegPos.y + lowerLegMusclePos.y);
     pop();
 
     push();
-    stroke(255, 0, 0);
-    line(uLegCentroid.x + uMoveCon.x, uLegCentroid.y + uMoveCon.y, lowerLegPos.x + uMoveCon.x, lowerLegPos.y + uMoveCon.y);
+    stroke(0, 0, 255);
+    line(lowerLegPos.x + lowerLegFootMusclePos.x, lowerLegPos.y + lowerLegFootMusclePos.y, footPos.x + footFootMusclePos.x, footPos.y + footFootMusclePos.y)
     pop();
   }
 
   this.extend = function() {
-    this.moveCon.length += 1;
+    if (this.legMuscle.length < 190) {
+      this.legMuscle.length += 4;
+    }
   }
 
   this.contract = function() {
-    this.moveCon.length -= 1;
+    if (this.legMuscle.length > 20) {
+      this.legMuscle.length -= 4;
+    }
   }
 
 }
